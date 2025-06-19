@@ -38,9 +38,8 @@
     <script>
         var id = getId();
         document.getElementById("homeLink").addEventListener('click', homeLink);
-        document.getElementById(editContact).addEventListener('click' , editContact);
+        document.getElementById("editContact").addEventListener('click', editContact);
         document.getElementById("submitForm").addEventListener('click', submitForm);
-       
 
         function getId() {
             const url = window.location.href;
@@ -63,43 +62,40 @@
                 })
                 .then(function(data) {
                     displayOutput(data[0]); 
-                    
-                })             
+                });
         }
 
         function displayOutput(data) {
-           
             document.getElementById("avatarImage").innerHTML = `
                 <img src="${rootPath}controller/uploads/${data.avatar}" width="200" />
             `;
 
-            
-            document.getElementById("firstname").value = data[0].firstname;
-            document.getElementById("lastname").value = data[0].lastname;
-            document.getElementById("mobile").value = data[0].mobile;
-            document.getElementById("email").value = data[0].email;
+            document.getElementById("firstname").value = data.firstname;
+            document.getElementById("lastname").value = data.lastname;
+            document.getElementById("mobile").value = data.mobile;
+            document.getElementById("email").value = data.email;
         }
 
         function homeLink() {
             window.open("index.html", "_self");
         }
-        
+
         function editContact(){
-            document.getElementById("firstname").readonly = false;
-            document.getElementById("lastname").readonly = false;
-             document.getElementById("mobile").readonly = false;
-            document.getElementById("email").readonly = false;
+            document.getElementById("firstname").readOnly = false;
+            document.getElementById("lastname").readOnly = false;
+            document.getElementById("mobile").readOnly = false;
+            document.getElementById("email").readOnly = false;
             document.getElementById("avatar").hidden = false;
-            document.getElentById("submitForm").hidden = false;
+            document.getElementById("submitForm").hidden = false;
         }
-        
+
         function submitForm(e){
             e.preventDefault();
-            
-            const form = new formData(document.quarySelector("editForm"));
-            form.appent('apikey', apikey)
-            form.appent('id', id);
-            
+
+            const form = new FormData(document.querySelector("#editForm"));
+            form.append('apikey', apikey);
+            form.append('id', id);
+
             fetch(rootPath + 'controller/edit-contact', {
                 method: 'POST',
                 headers: { 'Accept': 'application/json, */*' },
@@ -116,9 +112,8 @@
                     alert(data);
                     homeLink();
                 }
-            })
+            });
         }
-        
     </script>
 </body>
 </html>
