@@ -3,58 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <title>Contact Book</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 1em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            border-radius: 50%;
+        }
+    </style>
 </head>
-<body onload="fetchContacts()">
-
+<body>
+    <h1>Contact Book</h1>
     <div id="table">Contact loading...</div>
     <button id="refresh" type="button">Refresh</button>
     <button id="addContact" type="button">Add Contact</button>
 
     <script src="config.js"></script>
-
     <script>
-        // Add button events
         document.getElementById("refresh").addEventListener("click", fetchContacts);
         document.getElementById("addContact").addEventListener("click", addContact);
 
-        // Fetch contacts
+        // Fetch and display contacts on page load
+        document.addEventListener("DOMContentLoaded", fetchContacts);
+
         function fetchContacts(){
+            document.getElementById("table").textContent = "Contact loading...";
             fetch(rootPath + "controller/get-contacts/?apiKey=" + apikey)
-                .then(function(response){
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch contacts");
                     return response.json();
                 })
-                .then(function(data) {
-                    displayOutput(data);
-                    // console.log(data);
+                .then(data => displayOutput(data))
+                .catch(error => {
+                    document.getElementById("table").textContent = "Failed to load contacts: " + error;
                 });
         }
 
-        
         function displayOutput(data) {
-            let output = "<table>";
+            if (!Array.isArray(data) || data.length === 0) {
+                document.getElementById("table").textContent = "No contacts found.";
+                return;
+            }
 
-            for (a in data) {
+            let output = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Avatar</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (let i = 0; i < data.length; i++) {
+                const contact = data[i];
+                // Use the correct property for ID; assuming 'id' is correct.
                 output += `
-                    <tr onclick="editContact(${data[a].idedi})">
-                        <td><img src="${rootPath}controller/uploads/${data[a].avatar}" width="40"/></td>
-                        <td><h5>${data[a].firstname}</h5></td>
-                        <td><h5>${data[a].lastname}</h5></td>
+                    <tr tabindex="0" onclick="editContact(${encodeURIComponent(contact.id)})" onkeypress="if(event.key==='Enter'){editContact(${encodeURIComponent(contact.id)})}">
+                        <td><img src="${rootPath}controller/uploads/${encodeURIComponent(contact.avatar)}" width="40" alt="Contact Avatar"/></td>
+                        <td>${escapeHtml(contact.firstname)}</td>
+                        <td>${escapeHtml(contact.lastname)}</td>
                     </tr>
                 `;
             }
 
-            output += "</table>";
+            output += `
+                    </tbody>
+                </table>
+            `;
             document.getElementById("table").innerHTML = output;
         }
 
-        // Open Add Contact Page
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"'`=\/]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '/': '&#x2F;',
+                    '`': '&#x60;',
+                    '=': '&#x3D;'
+                })[s];
+            });
+        }
+
         function addContact() {
             window.open("add-contact.html", "_self");
         }
-        
-        function editContact(id){
+
+        // Make editContact global for onclick handler
+        window.editContact = function(id){
             window.open("edit-contact.html?id=" + id, "_self");
-        }
+        };
     </script>
 </body>
 </html>
